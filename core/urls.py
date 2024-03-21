@@ -2,11 +2,22 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
+from django.urls import include
+from apps.common.views import *
 
 from .schema import swagger_urlpatterns
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path('auth/',include('apps.users.urls')),
+    path('sponsor-create/' , SponsorCreateAPIView.as_view()),
+    path('sponsor-add/', StudentSponsorCreateAPIView.as_view()),
+    path('student/sponsors/<int:student_id>', StudentSponsorListAPIView.as_view()),
+    path('student-list/', StudentListAPIView.as_view()),
+    path('sponsor-list/', SponsorListAPIView.as_view()),
+    path('total-amount-statistics', TotalAmountStatisticsAPIView.as_view()),
+    path('monthly-statistics', MonthlyStatisticsAPIView.as_view()),
+
 ]
 
 urlpatterns += swagger_urlpatterns

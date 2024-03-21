@@ -4,6 +4,7 @@ from django.db.models.signals import pre_save,post_save
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from django.core.validators import RegexValidator
+from django.db.models import Sum
 
 
 JISMONIY , YURIDIK = 'jismoniy','yuridik'
@@ -38,13 +39,13 @@ class Sponsor(BaseModel):
     )
 
     PAYMENT_CHOICES = (
-        (BY_CARD,'card',
-         CASH , 'Naqd_pul')
+        (BY_CARD,'card'),
+         (CASH , 'Naqd pul'),
     )
 
     full_name = models.CharField(max_length=250)
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-    phone = models.CharField(max_length=25,validators =[phone_validator])
+    wallet = models.DecimalField(max_digits=12, decimal_places=2)
+    phone = models.CharField(max_length=13,validators =[phone_validator])
     type = models.CharField(max_length=250,
                             choices=TYPE_CHOICES,
                             default=JISMONIY,
@@ -58,6 +59,9 @@ class Sponsor(BaseModel):
                                     choices = PAYMENT_CHOICES,
                                     default = CASH
                                     )
+    @property
+    def allocated_amount(self):
+        return self.sponsor_amounts.aggregate(total_amount=Sum('amount'))['total_amount'] or 0
     
     
 
@@ -82,6 +86,9 @@ class Students(BaseModel):
                             default=BACHELOUR,
                             verbose_name = "Type")
     university = models.ForeignKey('University',on_delete=models.CASCADE,verbose_name='University')
+    @property
+    def allocated_amount(self):
+        return self.student_amounts.aggregate(total_amount=Sum('amount'))['total_amount'] or 0
     
 
     def __str__(self):
@@ -101,22 +108,22 @@ class AllocatedAmount(BaseModel):
                                 Sponsor,
                                 on_delete=models.PROTECT,
                                 verbose_name="Sponsor",
-                                related_name="sponsor_amount"
+                                related_name="sponsor_amounts"
                                 )
     student = models.ForeignKey(
                                 Students,
                                 on_delete=models.PROTECT,
                                 verbose_name="Student",
-                                related_name="student_amount"
+                                related_name="student_amounts"
                                 )
     amount = models.DecimalField(max_digits=12,
                                  decimal_places=2,
-                                 verbose_name="Amount"
+                                #  verbose_name="Amount"
                                  )
 
 
     def __str__(self):
-        return self.sponsor.full_name
+        return f"{self.sponsor}-{self.student}"
 
 
 
