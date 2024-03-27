@@ -123,7 +123,7 @@ class AllocatedAmount(BaseModel):
 
 
     def __str__(self):
-        return f"{self.sponsor}-{self.student}"
+        return f"{self.sponsor.full_name}-{self.student.full_name}-{self.id}"
 
 
 

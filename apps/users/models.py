@@ -1,11 +1,17 @@
+import random
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.hashers import make_password
-
+from rest_framework_simplejwt.tokens import RefreshToken
+import datetime
+from django.utils import timezone
 
 from django.core import validators
 from django.utils.deconstruct import deconstructible
+
+TIME = 1
+
 
 @deconstructible
 class PhoneValidator(validators.RegexValidator):
@@ -44,8 +50,21 @@ class CustomUserManager(BaseUserManager):
         return self._create_user(phone_number, password, **extra_fields)
 
 
+class UserConfirmation(models.Model):
+    user = models.OneToOneField(
+        'User',
+        on_delete=models.CASCADE,
+        related_name='confirmation',
+    )
+    code = models.CharField(max_length=4)
+    expire_datetime = models.DateTimeField()
 
-
+    def save(self, *args, **kwargs):
+        if self.code:
+            self.expire_datetime = timezone.now() + datetime.timedelta(minutes=TIME)
+        super(UserConfirmation, self).save(*args, **kwargs)
+    def str(self) -> str:
+        return f"{self.code} {self.user.phone_number}"
 
 class User(AbstractUser):
 
@@ -55,6 +74,8 @@ class User(AbstractUser):
     username = None
 
     phone_validator = PhoneValidator()
+
+    auth_status = models.BooleanField(default=False)
 
     phone_number = models.CharField(
         max_length = 13,
@@ -66,16 +87,23 @@ class User(AbstractUser):
 
     objects = CustomUserManager()
 
-    def __str__(self) -> str:
+    def str(self) -> str:
         return f"{self.id} - {self.phone_number}"
     
+    def tokens(self):
+        refresh = RefreshToken.for_user(self)
 
-from rest_framework_simplejwt.tokens import RefreshToken
-
-def get_tokens_for_user(self):
-    refresh = RefreshToken.for_user(self)
-
-    return {
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
-    }
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
+    
+    def get_code(self):
+        confirmation = UserConfirmation.objects.filter(user=self).first()
+        code = ''.join([str(random.randint(0, 1000))[-1] for _ in range(4)])
+        if confirmation:
+            confirmation.code = code
+            confirmation.save(update_fields=['code'])
+        else:
+            UserConfirmation.objects.create(user=self, code=code)
+        return code

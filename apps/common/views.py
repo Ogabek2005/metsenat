@@ -38,7 +38,7 @@ class StudentSponsorListAPIView(ListAPIView):
 class StudentListAPIView(ListAPIView):
     queryset = models.Students.objects.all()
     serializer_class = StudentListSerializer
-    ilter_backends = [DjangoFilterBackend,SearchFilter]
+    filter_backends = [DjangoFilterBackend,SearchFilter]
     filterset_fields = ['university','type']
     search_fields = ['full_name',]
 
@@ -100,5 +100,17 @@ class MonthlyStatisticsAPIView(APIView):
         return l[month_in_number]
          
 
+class StudentSponsorUpdateAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = models.AllocatedAmount.objects.all()
+    serializer_class = StudentSponsorUpdateSerializer
 
+
+
+class StudentUpdateAPIView(RetrieveUpdateAPIView):
+    queryset = Students.objects.all()
+    serializer_class =  StudentUpdateSerializer
     
+
+class SponsorUpdateAPIView(RetrieveUpdateAPIView):
+    queryset = Sponsor.objects.all()
+    serializer_class =  SponsorUpdateSerializer

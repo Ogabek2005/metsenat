@@ -17,6 +17,10 @@ urlpatterns = [
     path('sponsor-list/', SponsorListAPIView.as_view()),
     path('total-amount-statistics', TotalAmountStatisticsAPIView.as_view()),
     path('monthly-statistics', MonthlyStatisticsAPIView.as_view()),
+    path('student-sponsor-update/<int:pk>', StudentSponsorUpdateAPIView.as_view()),
+    path('student-updated/<int:pk>', StudentUpdateAPIView.as_view()),
+    path('sponsor-updated/<int:pk>', SponsorUpdateAPIView.as_view()),
+    
 
 ]
 
